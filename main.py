@@ -33,7 +33,7 @@ def extractGameData(url, startingGameId, startDate, endDate, delayBtnRequestsInS
             scoringFile.write("GameId,Period,Min,Sec,Team,Situation\n")
 
         # If the game is a game we are reporting on then write it to the file
-        if gameInDateRange(cells[0].get_text(), startDate, endDate) and cells[0].has_attr('a'):
+        if gameInDateRange(cells[0].get_text(), startDate, endDate) and cells[0].find('a') != None:
             gameFile.write(str(gameId) + "," + cells[0].get_text() + "," + cells[1].get_text() + "," + cells[2].get_text() + "," + cells[3].get_text() + "," + cells[4].get_text() + "," + cells[5].get_text() + "\n")
             extractSingleData(scoringFile, gameId, cells[0].find('a').get('href'))
             time.sleep(delayBtnRequestsInSecs)
@@ -116,4 +116,4 @@ def convertDateToNumber(date):
 # Provide the start date for games to extract in the format (YYYY-MM-DD) -- INCLUSIVE
 # Provide the end date for games to extract in the format (YYYY-MM-DD) -- INCLUSIVE
 # Provide the delay between requests in seconds (max is 20 requests per minute, if loading more than 20 games, set this to 3)
-extractGameData("/leagues/NHL_2024_games.html", 1, "2023-10-01", "2024-01-01", 3)
+extractGameData("/leagues/NHL_2024_games.html", 1, "2023-10-01", "2023-10-10", 3)
