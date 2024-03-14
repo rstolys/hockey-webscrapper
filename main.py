@@ -2,25 +2,38 @@ import requests
 import time
 from bs4 import BeautifulSoup
 
-GAMES_TABLE_ID = 'games'
-SCORING_TABLE_ID = 'scoring'
+# Constants
 BASE_URL = 'https://www.hockey-reference.com'
+
+GAMES_TABLE_ID = 'games'
+PLAYOFF_GAMES_TABLE_ID = 'games_playoffs'
+SCORING_TABLE_ID = 'scoring'
+
+GAME_FILE = "gamedata.csv"
+SCORING_FILE = "scoringdata.csv"
+PLAYOFF_GAME_FILE = "playoffgamedata.csv"
+PLAYOFF_SCORING_FILE = "playoffscoringdata.csv"
 
 # url: the relative url to extract the data from
 # startingGameId: the game id to start at (can find the last game id in the gamedata.csv file, add 1 to this value)
 # startDate: the date to start extracting data from (YYYY-MM-DD)
 # endDate: the date to end extracting data from (YYYY-MM-DD)
+# isPlayoffs: if the games are playoffs or not. This will extract data from different table and save it to a different file
 # delayBtnRequestsInSecs: the number of seconds to wait between each request to the server (max is 20 requests per minute, if loading more than 20 games, set this to 3)
-def extractGameData(url, startingGameId, startDate, endDate, delayBtnRequestsInSecs):
+def extractGameData(url, startingGameId, startDate, endDate, isPlayoffs, delayBtnRequestsInSecs):
+    _gameTableId = PLAYOFF_GAMES_TABLE_ID if isPlayoffs else GAMES_TABLE_ID
+    _gameFile = PLAYOFF_GAME_FILE if isPlayoffs else GAME_FILE
+    _scoringFile = PLAYOFF_SCORING_FILE if isPlayoffs else SCORING_FILE
+
     response = requests.get(BASE_URL + url)
 
     soup = BeautifulSoup(response.text, 'html.parser')
 
-    table = soup.find(lambda tag: tag.name=='table' and tag.has_attr('id') and tag['id']==GAMES_TABLE_ID) 
+    table = soup.find(lambda tag: tag.name=='table' and tag.has_attr('id') and tag['id']==_gameTableId) 
     rows = table.findAll(lambda tag: tag.name=='tr')
-
-    gameFile = open("gamedata.csv", "a")
-    scoringFile = open("scoringdata.csv", "a")
+    
+    gameFile = open(_gameFile, "a")
+    scoringFile = open(_scoringFile, "a")
 
     # Table Format: Date, Visitor, G, Home, G, _, Att., LOG, Notes
     gameId = startingGameId
@@ -115,5 +128,15 @@ def convertDateToNumber(date):
 # Provide the starting game id (can be found in the gamedata.csv file, add 1 to this value). If this is the beginning, start at 1
 # Provide the start date for games to extract in the format (YYYY-MM-DD) -- INCLUSIVE
 # Provide the end date for games to extract in the format (YYYY-MM-DD) -- INCLUSIVE
+# Provide a boolean if the games are playoffs or not (True means it is playoffs, False means it is not)
 # Provide the delay between requests in seconds (max is 20 requests per minute, if loading more than 20 games, set this to 3)
-extractGameData("/leagues/NHL_2024_games.html", 1, "2023-10-01", "2024-01-01", 3)
+extractGameData("/leagues/NHL_2023_games.html", 1, "2023-04-17", "2023-04-19", True, 0)
+
+
+# EXAMPLE A
+# -- Get all regular season games from in novmeber 2023 (part of 2023/2024 season)
+#extractGameData("/leagues/NHL_2024_games.html", 1, "2023-10-01", "2023-10-30", False, 3)
+
+# EXAMPLE B
+# -- Get all playoff games from in april 2023
+#extractGameData("/leagues/NHL_2023_games.html", 1, "2023-04-01", "2023-04-30", True, 0)
