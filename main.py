@@ -27,6 +27,8 @@ def extractGameData(url, startingGameId, startDate, endDate, isPlayoffs, delayBt
 
     response = requests.get(BASE_URL + url)
 
+    #print(response.text) # -- If not working, uncomment to see if the page is being loaded correctly
+
     soup = BeautifulSoup(response.text, 'html.parser')
 
     table = soup.find(lambda tag: tag.name=='table' and tag.has_attr('id') and tag['id']==_gameTableId) 
@@ -35,19 +37,19 @@ def extractGameData(url, startingGameId, startDate, endDate, isPlayoffs, delayBt
     gameFile = open(_gameFile, "a")
     scoringFile = open(_scoringFile, "a")
 
-    # Table Format: Date, Visitor, G, Home, G, _, Att., LOG, Notes
+    # Table Format: Date, Time, Visitor, G, Home, G, _, Att., LOG, Notes
     gameId = startingGameId
     for row in rows:
         cells = row.findChildren(['td', 'th'])
 
         # Print the header row if this is the top of the file
         if cells[0].get_text() == "Date" and startingGameId == 1:
-            gameFile.write("GameId," + cells[0].get_text() + "," + cells[1].get_text() + "," + cells[2].get_text() + "," + cells[3].get_text() + "," + cells[4].get_text() + "," + cells[5].get_text() + "\n")
+            gameFile.write("GameId," + cells[0].get_text() + "," + cells[1].get_text() + "," + cells[2].get_text() + "," + cells[3].get_text() + "," + cells[4].get_text() + "," + cells[5].get_text() + ",OT/SO" + "\n")
             scoringFile.write("GameId,Period,Min,Sec,Team,Situation\n")
 
         # If the game is a game we are reporting on then write it to the file
         if gameInDateRange(cells[0].get_text(), startDate, endDate) and cells[0].find('a') != None:
-            gameFile.write(str(gameId) + "," + cells[0].get_text() + "," + cells[1].get_text() + "," + cells[2].get_text() + "," + cells[3].get_text() + "," + cells[4].get_text() + "," + cells[5].get_text() + "\n")
+            gameFile.write(str(gameId) + "," + cells[0].get_text() + "," + cells[1].get_text() + "," + cells[2].get_text() + "," + cells[3].get_text() + "," + cells[4].get_text() + "," + cells[5].get_text() + "," + cells[6].get_text() + "\n")
             extractSingleData(scoringFile, gameId, cells[0].find('a').get('href'))
             time.sleep(delayBtnRequestsInSecs)
             gameId += 1 # Increment the game is, only if we are reporting the game
@@ -130,7 +132,7 @@ def convertDateToNumber(date):
 # Provide the end date for games to extract in the format (YYYY-MM-DD) -- INCLUSIVE
 # Provide a boolean if the games are playoffs or not (True means it is playoffs, False means it is not)
 # Provide the delay between requests in seconds (max is 20 requests per minute, if loading more than 20 games, set this to 3)
-extractGameData("/leagues/NHL_2023_games.html", 1, "2023-04-17", "2023-04-19", True, 0)
+extractGameData("/leagues/NHL_2025_games.html", 1, "2024-10-01", "2024-10-113", False, 0)
 
 
 # EXAMPLE A
